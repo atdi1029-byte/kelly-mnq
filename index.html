@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+  content="width=device-width, initial-scale=1.0">
+<title>Kelly — MNQ Scalper</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style"
+  content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, system-ui, sans-serif;
+  background: #0a0a0f;
+  color: #e0e0e0;
+  min-height: 100vh;
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+h1 {
+  font-size: 1.3rem;
+  text-align: center;
+  margin-bottom: 4px;
+  color: #00d4aa;
+}
+.subtitle {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+.card {
+  background: #14141f;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card h2 {
+  font-size: 0.85rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.input-row label {
+  font-size: 0.85rem;
+  color: #aaa;
+  min-width: 100px;
+}
+.input-row input {
+  flex: 1;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 1rem;
+}
+.input-row input:focus {
+  outline: none;
+  border-color: #00d4aa;
+}
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn:active { opacity: 0.7; }
+.btn-win {
+  background: #00c853;
+  color: #000;
+}
+.btn-loss {
+  background: #ff1744;
+  color: #fff;
+}
+.btn-undo {
+  background: #333;
+  color: #aaa;
+  font-size: 0.8rem;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 6px;
+  width: 100%;
+}
+
+/* Profit pool */
+.pool {
+  text-align: center;
+  padding: 12px 16px;
+}
+.pool .amount {
+  font-size: 2rem;
+  font-weight: 800;
+}
+.pool .label {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+/* Recommendation */
+.rec {
+  text-align: center;
+  padding: 20px 16px;
+}
+.rec .amount {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #00d4aa;
+}
+.rec .unit {
+  font-size: 1rem;
+  color: #888;
+  margin-top: 2px;
+}
+.rec .detail {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+/* Stats grid */
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  text-align: center;
+}
+.stat-val {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.stat-label {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 2px;
+}
+.green { color: #00c853; }
+.red { color: #ff1744; }
+.yellow { color: #ffd600; }
+
+/* History */
+.history {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+.trade-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #1a1a2e;
+  font-size: 0.82rem;
+}
+.trade-row:last-child { border-bottom: none; }
+.trade-w { color: #00c853; }
+.trade-l { color: #ff1744; }
+.trade-num { color: #555; }
+
+/* Kelly fraction selector */
+.kelly-frac {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.kelly-frac button {
+  flex: 1;
+  padding: 8px 4px;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #aaa;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.kelly-frac button.active {
+  border-color: #00d4aa;
+  color: #00d4aa;
+  background: #0d2a22;
+}
+
+/* Equity curve */
+.equity-canvas {
+  width: 100%;
+  height: 120px;
+  margin-top: 10px;
+  border-radius: 8px;
+  background: #1a1a2e;
+}
+
+.reset-btn {
+  display: block;
+  margin: 16px auto 0;
+  background: none;
+  border: 1px solid #333;
+  color: #666;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.no-edge {
+  color: #ff1744;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 6px;
+}
+.info {
+  font-size: 0.72rem;
+  color: #555;
+  text-align: center;
+  margin-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<h1>Kelly — MNQ Scalper</h1>
+<p class="subtitle">House money + half Kelly sizing</p>
+
+<!-- Profit Pool -->
+<div class="card pool">
+  <div class="label">PROFIT POOL</div>
+  <div class="amount" id="poolAmount">$0.00</div>
+  <div class="label">only risking what you've made</div>
+</div>
+
+<!-- Recommendation -->
+<div class="card rec">
+  <div class="unit">NEXT TRADE</div>
+  <div class="amount" id="recContracts">1</div>
+  <div class="unit">contracts</div>
+  <div class="detail" id="recDetail">
+    Start with 1 ct. Kelly scales you up.
+  </div>
+</div>
+
+<!-- Kelly mode -->
+<div class="card">
+  <h2>Kelly Mode</h2>
+  <div class="kelly-frac">
+    <button data-f="0.25">Quarter</button>
+    <button data-f="0.5" class="active">Half</button>
+    <button data-f="0.75">3/4</button>
+    <button data-f="1">Full</button>
+  </div>
+</div>
+
+<!-- Log trade -->
+<div class="card">
+  <h2>Log Trade</h2>
+  <div class="input-row">
+    <label>P&L ($)</label>
+    <input type="number" id="pnlInput"
+      placeholder="e.g. 7.50 or -4" step="any">
+  </div>
+  <p class="info">
+    Enter dollar P&L per contract.
+    MNQ = $2/point, so 1.25 pts = $2.50
+  </p>
+  <div class="btn-row">
+    <button class="btn btn-win"
+      id="btnWin">WIN</button>
+    <button class="btn btn-loss"
+      id="btnLoss">LOSS</button>
+  </div>
+  <button class="btn-undo" id="btnUndo">
+    Undo Last
+  </button>
+</div>
+
+<!-- Stats -->
+<div class="card">
+  <h2>Performance</h2>
+  <div class="stats">
+    <div>
+      <div class="stat-val" id="winRate">--</div>
+      <div class="stat-label">WIN RATE</div>
+    </div>
+    <div>
+      <div class="stat-val" id="kellyPct">--</div>
+      <div class="stat-label">KELLY %</div>
+    </div>
+    <div>
+      <div class="stat-val" id="expectancy">--</div>
+      <div class="stat-label">EXPECT/TR</div>
+    </div>
+  </div>
+  <div class="stats" style="margin-top:10px">
+    <div>
+      <div class="stat-val green"
+        id="avgWin">--</div>
+      <div class="stat-label">AVG WIN</div>
+    </div>
+    <div>
+      <div class="stat-val red"
+        id="avgLoss">--</div>
+      <div class="stat-label">AVG LOSS</div>
+    </div>
+    <div>
+      <div class="stat-val" id="totalPnl">--</div>
+      <div class="stat-label">TOTAL P&L</div>
+    </div>
+  </div>
+  <div class="stats" style="margin-top:10px">
+    <div>
+      <div class="stat-val green" id="wins">0</div>
+      <div class="stat-label">WINS</div>
+    </div>
+    <div>
+      <div class="stat-val red"
+        id="losses">0</div>
+      <div class="stat-label">LOSSES</div>
+    </div>
+    <div>
+      <div class="stat-val"
+        id="totalTrades">0</div>
+      <div class="stat-label">TRADES</div>
+    </div>
+  </div>
+  <canvas class="equity-canvas" id="equityChart">
+  </canvas>
+</div>
+
+<!-- Streaks -->
+<div class="card">
+  <h2>Streaks</h2>
+  <div class="stats">
+    <div>
+      <div class="stat-val green"
+        id="curStreak">--</div>
+      <div class="stat-label">CURRENT</div>
+    </div>
+    <div>
+      <div class="stat-val green"
+        id="bestStreak">--</div>
+      <div class="stat-label">BEST WIN</div>
+    </div>
+    <div>
+      <div class="stat-val red"
+        id="worstStreak">--</div>
+      <div class="stat-label">WORST LOSS</div>
+    </div>
+  </div>
+</div>
+
+<!-- History -->
+<div class="card">
+  <h2>Trade History</h2>
+  <div class="history" id="history">
+    <div style="color:#555;text-align:center;
+      padding:20px;font-size:0.85rem;">
+      No trades yet
+    </div>
+  </div>
+</div>
+
+<button class="reset-btn" id="btnReset">
+  Reset All Trades
+</button>
+
+<script>
+const $ = id => document.getElementById(id);
+const LS = 'kelly_mnq_v4';
+
+let state = load();
+
+function fresh() {
+  return {
+    fraction: 0.5,
+    pool: 11.00,
+    trades: [
+      { pnl: 7.50, pnlPerCt: 2.50, contracts: 3,
+        poolAfter: 7.50, ts: 1723496400000 },
+      { pnl: 2.00, pnlPerCt: 0.66, contracts: 3,
+        poolAfter: 9.50, ts: 1723496460000 },
+      { pnl: 1.50, pnlPerCt: 0.50, contracts: 3,
+        poolAfter: 11.00, ts: 1723496520000 }
+    ]
+  };
+}
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(LS));
+    if (d && Array.isArray(d.trades)) return d;
+  } catch(e) {}
+  return fresh();
+}
+
+function save() {
+  localStorage.setItem(LS, JSON.stringify(state));
+}
+
+function calcKelly() {
+  const t = state.trades;
+  if (t.length < 5) return null;
+
+  const wins = t.filter(x => x.pnl > 0);
+  const losses = t.filter(x => x.pnl <= 0);
+
+  if (!wins.length || !losses.length) return null;
+
+  const p = wins.length / t.length;
+  // avg win/loss per CONTRACT (not total)
+  const avgW = wins.reduce(
+    (s, x) => s + Math.abs(x.pnl) / x.contracts, 0
+  ) / wins.length;
+  const avgL = losses.reduce(
+    (s, x) => s + Math.abs(x.pnl) / x.contracts, 0
+  ) / losses.length;
+
+  if (avgL === 0) return null;
+
+  const b = avgW / avgL;
+  const q = 1 - p;
+  const f = (b * p - q) / b;
+
+  return { f, p, b, avgW, avgL };
+}
+
+function getContracts(k) {
+  if (!k || k.f <= 0 || state.pool <= 0) return 1;
+  const adjF = k.f * state.fraction;
+  const riskCapital = state.pool * adjF;
+  let cts = Math.floor(riskCapital / k.avgL);
+  return Math.max(cts, 1);
+}
+
+function update() {
+  // Kelly fraction buttons
+  document.querySelectorAll('.kelly-frac button')
+    .forEach(btn => {
+      btn.classList.toggle('active',
+        parseFloat(btn.dataset.f) === state.fraction);
+    });
+
+  const t = state.trades;
+  const w = t.filter(x => x.pnl > 0).length;
+  const l = t.length - w;
+
+  // Profit pool
+  const poolEl = $('poolAmount');
+  poolEl.textContent =
+    (state.pool >= 0 ? '+' : '-') +
+    '$' + Math.abs(state.pool).toFixed(2);
+  poolEl.style.color =
+    state.pool > 0 ? '#00c853'
+    : state.pool < 0 ? '#ff1744' : '#e0e0e0';
+
+  $('wins').textContent = w;
+  $('losses').textContent = l;
+  $('totalTrades').textContent = t.length;
+
+  const k = calcKelly();
+
+  if (!k) {
+    $('winRate').textContent = t.length
+      ? (w / t.length * 100).toFixed(0) + '%'
+      : '--';
+    $('winRate').className = 'stat-val';
+    $('kellyPct').textContent = '--';
+    $('expectancy').textContent = '--';
+    $('avgWin').textContent = '--';
+    $('avgLoss').textContent = '--';
+    $('recContracts').textContent = '1';
+    $('recContracts').style.color = '#00d4aa';
+    if (t.length < 5) {
+      $('recDetail').textContent =
+        'Need ' + (5 - t.length) +
+        ' more trades. Trading 1 ct.';
+    } else {
+      $('recDetail').textContent =
+        'Need wins AND losses to calculate';
+    }
+    updatePnl(t);
+    updateStreaks(t);
+    renderHistory();
+    drawEquity();
+    return;
+  }
+
+  // Win rate
+  $('winRate').textContent =
+    (k.p * 100).toFixed(1) + '%';
+  $('winRate').className =
+    'stat-val ' + (k.p >= 0.5 ? 'green' : 'red');
+
+  // Avg win/loss per contract
+  $('avgWin').textContent =
+    '+$' + k.avgW.toFixed(2);
+  $('avgLoss').textContent =
+    '-$' + k.avgL.toFixed(2);
+
+  // Expectancy per contract per trade
+  const exp = k.p * k.avgW - (1 - k.p) * k.avgL;
+  $('expectancy').textContent =
+    (exp >= 0 ? '+' : '') + '$' + exp.toFixed(2);
+  $('expectancy').className =
+    'stat-val ' + (exp >= 0 ? 'green' : 'red');
+
+  // Kelly %
+  const adjF = k.f * state.fraction;
+
+  if (k.f <= 0) {
+    $('kellyPct').textContent = '0%';
+    $('kellyPct').className = 'stat-val red';
+    $('recContracts').textContent = '1';
+    $('recContracts').style.color = '#ff1744';
+    $('recDetail').innerHTML =
+      '<span class="no-edge">' +
+      'No edge. Kelly says sit out or trade 1.' +
+      '</span>';
+  } else if (state.pool <= 0) {
+    $('kellyPct').textContent =
+      (adjF * 100).toFixed(1) + '%';
+    $('kellyPct').className = 'stat-val yellow';
+    $('recContracts').textContent = '1';
+    $('recContracts').style.color = '#ffd600';
+    $('recDetail').textContent =
+      'Edge exists but pool is empty. Stay at 1.';
+  } else {
+    $('kellyPct').textContent =
+      (adjF * 100).toFixed(1) + '%';
+    $('kellyPct').className = 'stat-val yellow';
+
+    const cts = getContracts(k);
+    $('recContracts').textContent = cts;
+    $('recContracts').style.color = '#00d4aa';
+
+    const fLabel = state.fraction === 1 ? 'Full'
+      : state.fraction === 0.75 ? '3/4'
+      : state.fraction === 0.5 ? 'Half'
+      : 'Quarter';
+    const riskAmt = (state.pool * adjF).toFixed(2);
+    $('recDetail').textContent =
+      fLabel + ' Kelly | Risk $' + riskAmt +
+      ' of $' + state.pool.toFixed(2) +
+      ' pool | W:L ' + k.b.toFixed(2);
+  }
+
+  updatePnl(t);
+  updateStreaks(t);
+  renderHistory();
+  drawEquity();
+}
+
+function updatePnl(t) {
+  const pnl = t.reduce((s, x) => s + x.pnl, 0);
+  $('totalPnl').textContent =
+    (pnl >= 0 ? '+' : '') + '$' + pnl.toFixed(2);
+  $('totalPnl').className =
+    'stat-val ' + (pnl >= 0 ? 'green' : 'red');
+}
+
+function updateStreaks(t) {
+  if (!t.length) {
+    $('curStreak').textContent = '--';
+    $('bestStreak').textContent = '--';
+    $('worstStreak').textContent = '--';
+    return;
+  }
+
+  let bestW = 0, worstL = 0;
+  let streak = 0, lastDir = null;
+
+  for (const trade of t) {
+    const dir = trade.pnl > 0 ? 'W' : 'L';
+    if (dir === lastDir) {
+      streak += (dir === 'W' ? 1 : -1);
+    } else {
+      streak = dir === 'W' ? 1 : -1;
+    }
+    lastDir = dir;
+    if (streak > bestW) bestW = streak;
+    if (streak < worstL) worstL = streak;
+  }
+
+  $('curStreak').textContent =
+    (streak > 0 ? '+' : '') + streak;
+  $('curStreak').className =
+    'stat-val ' + (streak > 0 ? 'green' : 'red');
+  $('bestStreak').textContent = '+' + bestW;
+  $('worstStreak').textContent = worstL;
+}
+
+function renderHistory() {
+  const el = $('history');
+  if (!state.trades.length) {
+    el.innerHTML =
+      '<div style="color:#555;text-align:center;' +
+      'padding:20px;font-size:0.85rem;">' +
+      'No trades yet</div>';
+    return;
+  }
+  el.innerHTML = state.trades
+    .slice().reverse()
+    .map((t, i) => {
+      const n = state.trades.length - i;
+      const isWin = t.pnl > 0;
+      const cls = isWin ? 'trade-w' : 'trade-l';
+      const sign = isWin ? '+' : '';
+      return `<div class="trade-row">
+        <span class="trade-num">#${n}</span>
+        <span class="${cls}">
+          ${isWin ? 'W' : 'L'}
+        </span>
+        <span style="color:#777">
+          ${t.contracts}ct
+        </span>
+        <span class="${cls}">
+          ${sign}$${t.pnl.toFixed(2)}
+        </span>
+        <span style="color:#555;font-size:0.7rem">
+          pool: $${t.poolAfter.toFixed(2)}
+        </span>
+      </div>`;
+    }).join('');
+}
+
+function drawEquity() {
+  const canvas = $('equityChart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+
+  if (state.trades.length < 2) {
+    ctx.fillStyle = '#555';
+    ctx.font = '12px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      'Profit curve after 2+ trades',
+      w / 2, h / 2
+    );
+    return;
+  }
+
+  // Build equity line from pool history
+  let equity = [0];
+  for (const t of state.trades) {
+    equity.push(t.poolAfter);
+  }
+
+  const min = Math.min(...equity);
+  const max = Math.max(...equity);
+  const range = max - min || 1;
+  const pad = 8;
+
+  // Zero line
+  const zeroY = h - pad
+    - ((0 - min) / range) * (h - pad * 2);
+  ctx.beginPath();
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([4, 4]);
+  ctx.moveTo(pad, zeroY);
+  ctx.lineTo(w - pad, zeroY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Equity line
+  ctx.beginPath();
+  ctx.strokeStyle = '#00d4aa';
+  ctx.lineWidth = 1.5;
+
+  for (let i = 0; i < equity.length; i++) {
+    const x = pad + (i / (equity.length - 1))
+      * (w - pad * 2);
+    const y = h - pad
+      - ((equity[i] - min) / range)
+      * (h - pad * 2);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Current value label
+  const last = equity[equity.length - 1];
+  ctx.fillStyle = last >= 0
+    ? '#00c853' : '#ff1744';
+  ctx.font = 'bold 11px system-ui';
+  ctx.textAlign = 'right';
+  ctx.fillText(
+    (last >= 0 ? '+' : '') +
+    '$' + last.toFixed(2),
+    w - pad, 14
+  );
+}
+
+function logTrade(isWin) {
+  let pnl = parseFloat($('pnlInput').value);
+  if (isNaN(pnl) || pnl === 0) {
+    $('pnlInput').style.borderColor = '#ff1744';
+    $('pnlInput').focus();
+    return;
+  }
+  $('pnlInput').style.borderColor = '#333';
+
+  // Make sign match button
+  pnl = Math.abs(pnl);
+  if (!isWin) pnl = -pnl;
+
+  // Get current recommended contracts
+  const k = calcKelly();
+  const contracts = getContracts(k);
+
+  // Total P&L = per-contract P&L * contracts
+  const totalPnl = pnl * contracts;
+
+  state.pool += totalPnl;
+
+  state.trades.push({
+    pnl: totalPnl,
+    pnlPerCt: pnl,
+    contracts: contracts,
+    poolAfter: state.pool,
+    ts: Date.now()
+  });
+
+  $('pnlInput').value = '';
+  save();
+  update();
+}
+
+// Event listeners
+document.querySelectorAll('.kelly-frac button')
+  .forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.fraction = parseFloat(btn.dataset.f);
+      save();
+      update();
+    });
+  });
+
+$('btnWin').addEventListener('click',
+  () => logTrade(true));
+$('btnLoss').addEventListener('click',
+  () => logTrade(false));
+
+$('btnUndo').addEventListener('click', () => {
+  if (!state.trades.length) return;
+  const last = state.trades.pop();
+  state.pool -= last.pnl;
+  save();
+  update();
+});
+
+$('btnReset').addEventListener('click', () => {
+  if (!confirm(
+    'Reset all trades and profit pool?')) return;
+  state = fresh();
+  save();
+  update();
+});
+
+// Init
+update();
+</script>
+</body>
+</html>
